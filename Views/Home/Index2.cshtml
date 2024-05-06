@@ -1,0 +1,57 @@
+﻿@{
+    ViewData["Title"] = "Speech Decryption";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Speech Decryption</h1>
+    <div>
+        <label for="cipherText">Cipher Text:</label>
+        <textarea id="cipherText" class="form-control" rows="4"></textarea>
+        <button class="btn btn-primary" onclick="decryptText()" style="margin-top: 10px;">Decrypt</button>
+        
+    </div>
+
+    <div style="margin-top: 20px;">
+        <label for="inputText">Input Speech:</label>
+        <textarea id="inputText" class="form-control" rows="4" readonly></textarea>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var inputText = document.getElementById('inputText');
+
+        function decryptText() {
+            var encryptedText = document.getElementById('cipherText').value;
+
+            sendSpeechForDecryption(encryptedText);
+        }
+
+        function sendSpeechForDecryption(cipherText) {
+            console.log('Cipher Text Sent for Decryption.');
+            fetch('/Home/DecryptSpeech', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ cipherText: cipherText })
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Cipher Text decrypted successfully.');
+                    return response.json();
+                } else {
+                    console.error('Error decrypting cipher text.');
+                    alert("Error! Please reload page and try again");
+                }
+            })
+            .then(data => {
+                inputText.value = data.decryptedText;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Error! Please reload page and try again");
+            });
+        }
+    </script>
+}

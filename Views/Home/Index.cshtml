@@ -1,0 +1,100 @@
+﻿@{
+    ViewData["Title"] = "Speech Encryption";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Speech Encryption</h1>
+    <div style="padding: 15px;">
+        <button id="startButton" class="btn btn-primary">Start Speech</button>
+        <button id="stopButton" class="btn btn-danger" disabled>Stop Speech</button>
+    </div>
+    <label for="speechText">Speech Text:</label>
+    <textarea id="speechOutput" class="form-control" rows="4" readonly></textarea>
+    <label for="cipherText">Cipher Text:</label>
+    <textarea id="cipherOutput" class="form-control" rows="4" readonly></textarea>
+</div>
+
+@section Scripts {
+    <script>
+        var startButton = document.getElementById('startButton');
+        var stopButton = document.getElementById('stopButton');
+        var speechOutput = document.getElementById('speechOutput');
+        var cipherOutput = document.getElementById('cipherOutput');
+
+        var recordedSpeech = '';
+        var recognition = new webkitSpeechRecognition(); // For Chrome
+        //var recognition = new SpeechRecognition(); // For other browsers
+
+        function startSpeech() {
+            speechOutput.value = '';
+
+            recognition.lang = 'en-US';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            recognition.onresult = function (event) {
+                var interimTranscript = '';
+                var tempTranscript = '';
+                for (var i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        var finalTranscript = event.results[i][0].transcript;
+                        tempTranscript += finalTranscript + ' ';
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                        speechOutput.value = interimTranscript;
+                    }
+                    recordedSpeech = tempTranscript;
+                }
+            };
+
+            recognition.start();
+            console.log('Speech Start.');
+
+            startButton.disabled = true;
+            stopButton.disabled = false;
+        }
+
+        function stopSpeech() {
+            recognition.stop();
+            console.log('Speech Stop.');
+
+            setTimeout( function() {
+                sendSpeechForEncryption(recordedSpeech);
+            },1000)
+
+            startButton.disabled = false;
+            stopButton.disabled = true;
+        }
+
+        function sendSpeechForEncryption(speech) {
+            console.log('Speech Sent.');
+            fetch('/Home/EncryptSpeech', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ speech: speech })
+            })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Speech encrypted successfully.');
+                        return response.json();
+                    } else {
+                        console.error('Error encrypting speech.');
+                        alert("Error! Please reload page and try again");
+                    }
+                })
+                .then(data => {
+                    cipherOutput.textContent = "";
+                    cipherOutput.textContent = data.cipherText;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Error! Please reload page and try again");
+                });
+        }
+
+        startButton.addEventListener('click', startSpeech);
+        stopButton.addEventListener('click', stopSpeech);
+    </script>
+}
