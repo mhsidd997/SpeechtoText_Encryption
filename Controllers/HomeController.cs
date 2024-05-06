@@ -33,7 +33,6 @@ namespace SpeechtoText_Encryption.Controllers
                 {
                     string speech = speechElement.GetString();
 
-                    //string key = "1234567890123456";
                     string key = _config.GetValue<string>("AESKey");
                     byte[] keyBytes = Encoding.UTF8.GetBytes(key);
                     byte[] speechBytes = Encoding.UTF8.GetBytes(speech);
@@ -91,7 +90,6 @@ namespace SpeechtoText_Encryption.Controllers
                 {
                     string cipherText = cipherTextElement.GetString();
 
-                    //string key = "1234567890123456";
                     string key = _config.GetValue<string>("AESKey");
                     byte[] keyBytes = Encoding.UTF8.GetBytes(key);
                     byte[] cipherBytes = Convert.FromBase64String(cipherText);
